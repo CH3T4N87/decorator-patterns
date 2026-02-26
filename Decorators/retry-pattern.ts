@@ -10,7 +10,20 @@ function Retry(times: number) {
       // console.log("propertyKey: "+propertyKey); fun name
       // console.log(descriptor); //prop chars
       let retryCount = 1;
-
+      const original = descriptor.value;
+      descriptor.value = (...args: any[]) => {
+         console.log("----------Initiating Payment-----------");
+         original.apply(this, args)
+         .then((res: any) => console.log(res))
+         .catch((err: any)=>{
+            console.log("Payment Failed : RETRY NO."+retryCount);
+            if(retryCount < 3){
+               original.apply(this, args)
+            }else{
+               console.log(err);
+            }
+         })
+      }
 
 
 
@@ -21,8 +34,13 @@ function Retry(times: number) {
 class PaymentService {
    @Retry(3)
    pay(amount: number) {
-      
-      console.log("Processing payment of " + amount);
+      const random = Math.random();
+      if(random === 0){
+         return Promise.resolve("Processing payment of "+amount);
+      }else{
+         return Promise.reject("Payment failed because you are broke !!!!");
+      }
+      // console.log("Processing payment of " + amount);
    }
 }
 
